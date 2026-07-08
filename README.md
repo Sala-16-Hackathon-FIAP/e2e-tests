@@ -142,3 +142,7 @@ All configuration is via system properties with sensible defaults:
 ## CI/CD
 
 These tests run as a post-deploy validation step. In CI, they execute after all microservices are deployed to the target environment. They are **not** deployed as a service — this project has no Dockerfile or Kubernetes manifests.
+
+## Acknowledgments
+
+This project was developed with the assistance of [Claude](https://claude.com/claude-code) (Anthropic) as an AI pair-programming tool for code implementation, debugging, and documentation.
