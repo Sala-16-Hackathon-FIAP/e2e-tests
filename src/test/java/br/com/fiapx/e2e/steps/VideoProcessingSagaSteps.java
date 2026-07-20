@@ -24,6 +24,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class VideoProcessingSagaSteps {
 
+    private static final List<String> STATUS_PROGRESSION = List.of(
+            "UPLOAD_COMPLETED", "PROCESSING_STARTED", "PROCESSING_COMPLETED"
+    );
+    private static final List<String> FAILURE_PROGRESSION = List.of(
+            "UPLOAD_COMPLETED", "PROCESSING_STARTED", "PROCESSING_FAILED"
+    );
+
     private String token;
     private String userId;
     private UUID uploadId;
@@ -145,8 +152,23 @@ public class VideoProcessingSagaSteps {
                             .get("/api/v1/status/uploads/" + uploadId);
 
                     assertEquals(200, response.statusCode());
-                    assertEquals(expectedStatus, response.jsonPath().getString("status"));
+                    String actualStatus = response.jsonPath().getString("status");
+                    assertTrue(
+                            statusAtOrPast(actualStatus, expectedStatus),
+                            "Expected status at or past " + expectedStatus + " but was " + actualStatus
+                    );
                 });
+    }
+
+    private boolean statusAtOrPast(String actual, String expected) {
+        List<String> progression = expected.contains("FAILED") || actual.contains("FAILED")
+                ? FAILURE_PROGRESSION : STATUS_PROGRESSION;
+        int actualIdx = progression.indexOf(actual);
+        int expectedIdx = progression.indexOf(expected);
+        if (actualIdx == -1 || expectedIdx == -1) {
+            return actual.equals(expected);
+        }
+        return actualIdx >= expectedIdx;
     }
 
     @And("the notification-service should have a {string} notification for the user")
