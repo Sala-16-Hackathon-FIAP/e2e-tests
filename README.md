@@ -35,8 +35,8 @@ This project tests the **full saga flow** across all microservices:
 
 | Scenario | What it validates |
 |---|---|
-| Happy path | Upload → processing → COMPLETED status → notification → ZIP in S3 |
-| Failed processing | Invalid S3 key → FAILED status → failure notification |
+| Happy path | Upload (UPLOADING → COMPLETED) → processing → PROCESSING_COMPLETED status → notification → ZIP in S3 |
+| Failed processing | Invalid S3 key → PROCESSING_FAILED status → failure notification |
 
 ## Prerequisites
 
@@ -135,7 +135,6 @@ All configuration is via system properties with sensible defaults:
 |---|---|---|
 | `auth.url` | `http://localhost:8080` | auth-service base URL |
 | `upload.url` | `http://localhost:8082` | upload-service base URL |
-| `processor.url` | `http://localhost:8083` | video-processor-service base URL |
 | `status.url` | `http://localhost:8084` | status-service base URL |
 | `notification.url` | `http://localhost:8085` | notification-service base URL |
 | `rabbitmq.host` | `localhost` | RabbitMQ host |

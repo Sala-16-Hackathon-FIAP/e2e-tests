@@ -13,7 +13,6 @@ public final class TestConfig {
 
     public static final String AUTH_URL = System.getProperty("auth.url", "http://localhost:8080");
     public static final String UPLOAD_URL = System.getProperty("upload.url", "http://localhost:8082");
-    public static final String PROCESSOR_URL = System.getProperty("processor.url", "http://localhost:8083");
     public static final String STATUS_URL = System.getProperty("status.url", "http://localhost:8084");
     public static final String NOTIFICATION_URL = System.getProperty("notification.url", "http://localhost:8085");
 

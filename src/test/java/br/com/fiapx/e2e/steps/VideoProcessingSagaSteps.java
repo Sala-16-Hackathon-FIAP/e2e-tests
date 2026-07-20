@@ -142,27 +142,6 @@ public class VideoProcessingSagaSteps {
                 });
     }
 
-    @And("the video-processor should eventually create a job with status {string}")
-    public void processorShouldCreateJob(String expectedStatus) {
-        await().atMost(TestConfig.POLL_TIMEOUT_SECONDS, SECONDS)
-                .pollInterval(2, SECONDS)
-                .untilAsserted(() -> {
-                    Response response = given()
-                            .baseUri(TestConfig.PROCESSOR_URL)
-                            .header("Authorization", "Bearer " + token)
-                            .when()
-                            .get("/api/v1/jobs");
-
-                    assertEquals(200, response.statusCode());
-                    List<?> jobs = response.jsonPath().getList("$");
-                    assertFalse(jobs.isEmpty(), "No jobs found");
-                    boolean found = response.jsonPath().getList("status")
-                            .stream().anyMatch(s -> expectedStatus.equals(s));
-                    assertTrue(found, "No job with status " + expectedStatus +
-                            ", found: " + response.jsonPath().getList("status"));
-                });
-    }
-
     @And("the notification-service should have a {string} notification for the user")
     public void notificationServiceShouldHave(String expectedType) {
         await().atMost(TestConfig.POLL_TIMEOUT_SECONDS, SECONDS)
