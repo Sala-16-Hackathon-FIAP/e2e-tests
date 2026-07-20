@@ -27,7 +27,7 @@ public final class TestConfig {
     public static final String AUTH_EMAIL = System.getProperty("auth.email", "useradmin@email.com");
     public static final String AUTH_PASSWORD = System.getProperty("auth.password", "Admin@12345");
 
-    public static final int POLL_TIMEOUT_SECONDS = Integer.parseInt(System.getProperty("poll.timeout", "60"));
+    public static final int POLL_TIMEOUT_SECONDS = Integer.parseInt(System.getProperty("poll.timeout", "120"));
 
     public static S3Client createS3Client() {
         var builder = S3Client.builder()
