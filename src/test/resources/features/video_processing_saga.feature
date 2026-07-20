@@ -21,6 +21,5 @@ Feature: Video Processing Saga
     When the user initiates a multipart upload for "corrupted.mov"
     And the user uploads chunk 1
     And the user completes the upload
-    And a processing event is published with an invalid s3Key
     And the status-service should eventually show "PROCESSING_FAILED" for the upload
     And the notification-service should have a "PROCESSING_FAILED" notification for the user
