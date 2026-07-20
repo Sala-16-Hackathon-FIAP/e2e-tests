@@ -55,6 +55,12 @@ jobs:
             echo "notification_url=http://$(kubectl get svc notification-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Port-forward RabbitMQ
+        run: |
+          kubectl port-forward svc/rabbitmq 5672:5672 -n messaging &
+          sleep 5
+          echo "RabbitMQ port-forward established on localhost:5672"
+
       - name: Run E2E tests
         run: |
           mvn -B test \
@@ -63,10 +69,9 @@ jobs:
             -Dprocessor.url=${{ steps.urls.outputs.processor_url }} \
             -Dstatus.url=${{ steps.urls.outputs.status_url }} \
             -Dnotification.url=${{ steps.urls.outputs.notification_url }} \
-            -Drabbitmq.host=${{ secrets.RABBITMQ_HOST }} \
+            -Drabbitmq.host=localhost \
             -Drabbitmq.user=${{ secrets.RABBITMQ_USERNAME }} \
             -Drabbitmq.pass=${{ secrets.RABBITMQ_PASSWORD }} \
-            -Ds3.endpoint=${{ secrets.S3_ENDPOINT }} \
             -Ds3.bucket=${{ secrets.S3_BUCKET }}
 
       - name: Upload Cucumber reports
