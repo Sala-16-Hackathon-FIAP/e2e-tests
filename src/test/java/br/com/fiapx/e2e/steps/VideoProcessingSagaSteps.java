@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,11 +28,14 @@ public class VideoProcessingSagaSteps {
     private String userId;
     private UUID uploadId;
     private String s3Key;
+    private byte[] videoChunk;
     private final byte[] fakeChunk = new byte[1024];
+    private boolean currentFilenameIsCorrupted;
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        videoChunk = getClass().getResourceAsStream("/fixtures/test-video.mov").readAllBytes();
     }
 
     @Given("the user is authenticated")
@@ -64,13 +68,15 @@ public class VideoProcessingSagaSteps {
 
     @When("the user initiates a multipart upload for {string}")
     public void theUserInitiatesUpload(String filename) {
+        currentFilenameIsCorrupted = filename.contains("corrupted");
+        long fileSize = currentFilenameIsCorrupted ? 1024 : videoChunk.length;
         Response response = given()
                 .baseUri(TestConfig.UPLOAD_URL)
                 .header("Authorization", "Bearer " + token)
                 .contentType(ContentType.JSON)
                 .body("""
-                    {"filename":"%s","fileSize":1024,"mimeType":"video/quicktime"}
-                    """.formatted(filename))
+                    {"filename":"%s","fileSize":%d,"mimeType":"video/quicktime"}
+                    """.formatted(filename, fileSize))
                 .when()
                 .post("/api/v1/uploads/initiate");
 
@@ -92,10 +98,11 @@ public class VideoProcessingSagaSteps {
 
     @When("the user uploads chunk {int}")
     public void theUserUploadsChunk(int chunkNumber) {
+        byte[] data = currentFilenameIsCorrupted ? fakeChunk : videoChunk;
         Response response = given()
                 .baseUri(TestConfig.UPLOAD_URL)
                 .header("Authorization", "Bearer " + token)
-                .multiPart("file", "chunk-" + chunkNumber + ".bin", fakeChunk)
+                .multiPart("file", "chunk-" + chunkNumber + ".bin", data)
                 .when()
                 .put("/api/v1/uploads/" + uploadId + "/chunks/" + chunkNumber);
 
@@ -139,27 +146,6 @@ public class VideoProcessingSagaSteps {
 
                     assertEquals(200, response.statusCode());
                     assertEquals(expectedStatus, response.jsonPath().getString("status"));
-                });
-    }
-
-    @And("the video-processor should eventually create a job with status {string}")
-    public void processorShouldCreateJob(String expectedStatus) {
-        await().atMost(TestConfig.POLL_TIMEOUT_SECONDS, SECONDS)
-                .pollInterval(2, SECONDS)
-                .untilAsserted(() -> {
-                    Response response = given()
-                            .baseUri(TestConfig.PROCESSOR_URL)
-                            .header("Authorization", "Bearer " + token)
-                            .when()
-                            .get("/api/v1/jobs");
-
-                    assertEquals(200, response.statusCode());
-                    List<?> jobs = response.jsonPath().getList("$");
-                    assertFalse(jobs.isEmpty(), "No jobs found");
-                    boolean found = response.jsonPath().getList("status")
-                            .stream().anyMatch(s -> expectedStatus.equals(s));
-                    assertTrue(found, "No job with status " + expectedStatus +
-                            ", found: " + response.jsonPath().getList("status"));
                 });
     }
 

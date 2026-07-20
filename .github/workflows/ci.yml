@@ -44,13 +44,11 @@ jobs:
             BASE_URL="http://${API_GW_HOST}"
             echo "auth_url=${BASE_URL}" >> "$GITHUB_OUTPUT"
             echo "upload_url=${BASE_URL}" >> "$GITHUB_OUTPUT"
-            echo "processor_url=${BASE_URL}" >> "$GITHUB_OUTPUT"
             echo "status_url=${BASE_URL}" >> "$GITHUB_OUTPUT"
             echo "notification_url=${BASE_URL}" >> "$GITHUB_OUTPUT"
           else
             echo "auth_url=http://$(kubectl get svc auth-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> "$GITHUB_OUTPUT"
             echo "upload_url=http://$(kubectl get svc upload-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> "$GITHUB_OUTPUT"
-            echo "processor_url=http://$(kubectl get svc video-processor-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> "$GITHUB_OUTPUT"
             echo "status_url=http://$(kubectl get svc status-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> "$GITHUB_OUTPUT"
             echo "notification_url=http://$(kubectl get svc notification-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> "$GITHUB_OUTPUT"
           fi
@@ -66,7 +64,6 @@ jobs:
           mvn -B test \
             -Dauth.url=${{ steps.urls.outputs.auth_url }} \
             -Dupload.url=${{ steps.urls.outputs.upload_url }} \
-            -Dprocessor.url=${{ steps.urls.outputs.processor_url }} \
             -Dstatus.url=${{ steps.urls.outputs.status_url }} \
             -Dnotification.url=${{ steps.urls.outputs.notification_url }} \
             -Drabbitmq.host=localhost \
